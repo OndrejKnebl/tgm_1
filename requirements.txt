@@ -1,0 +1,5 @@
+# requirements.txt
+requests
+influxdb
+python-dateutil
+pytz

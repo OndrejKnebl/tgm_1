@@ -1,0 +1,61 @@
+# docker-compose.yml
+version: '3.8'
+services:
+  influxdb:
+    image: influxdb:1.8.10
+    container_name: influxdb
+    environment:
+      INFLUXDB_DB: ttnGateways                                      # Creates a database in InfluxDB with this name
+      INFLUXDB_ADMIN_USER: myNewAdmin                               # Creates admin user in InfluxDB with name and password
+      INFLUXDB_ADMIN_PASSWORD: myAdminPassword
+      INFLUXDB_WRITE_USER: myNewWriteUser                           # Creates a user with write rights in InfluxDB with name and password
+      INFLUXDB_WRITE_USER_PASSWORD: myNewWriteUserPassword
+      INFLUXDB_READ_USER: myNewReadUser                             # Creates a user with read rights in InfluxDB with name and password
+      INFLUXDB_READ_USER_PASSWORD: myNewReadUserPassword
+      INFLUXDB_HTTP_ENABLED: "true"
+      INFLUXDB_HTTP_AUTH_ENABLED: "true"
+      INFLUXDB_META_DIR: /var/lib/influxdb/meta2
+    volumes:
+      - influxdb:/var/lib/influxdb
+    networks:
+      - myNetworkIandG
+      - myNetworkIandM
+    restart: always
+
+  tgm_1:
+    build: .
+    container_name: tgm_1
+    environment:
+      TTN_PERSONAL_API_KEY: NNSXS.AB...                             # Enter your personal API key from TTN here
+      TTN_URL: https://eu1.cloud.thethings.network                  # TTN cluster
+      COLLECTION_INTERVAL: 300                                      # TTN data collection interval in seconds
+      DB_URL: influxdb
+      DB_PORT: 8086
+      DB_USERNAME: myNewWriteUser                                   # The credentials of an InfluxDB user with write rights
+      DB_PASSWORD: myNewWriteUserPassword
+      DB_NAME: ttnGateways                                          # The name of the created database in InfluxDB
+      DB_MEASUREMENT: GW                                            # Creates a measurement with this name
+    networks:
+      - myNetworkIandM
+    restart: always
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - myNetworkIandG
+    restart: always
+
+networks:
+  myNetworkIandG:
+    external: false
+  myNetworkIandM:
+    external: false
+
+volumes:
+  influxdb:
+  grafana_data:
